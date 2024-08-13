@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
+  const [permissionGranted, setPermissionGranted] = useState(false);
   const [rotation, setRotation] = useState({ alpha: 0, beta: 0, gamma: 0 });
 
   useEffect(() => {
@@ -13,7 +14,27 @@ function App() {
       });
     };
 
-    window.addEventListener('deviceorientation', handleOrientation);
+    const requestPermission = async () => {
+      try {
+        //@ts-ignore
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        //@ts-ignore
+          const response = await DeviceOrientationEvent.requestPermission();
+          if (response === 'granted') {
+            setPermissionGranted(true);
+            window.addEventListener('deviceorientation', handleOrientation);
+          }
+        } else {
+          // For non-iOS devices
+          setPermissionGranted(true);
+          window.addEventListener('deviceorientation', handleOrientation);
+        }
+      } catch (error) {
+        console.error('Permission denied', error);
+      }
+    };
+
+    requestPermission();
 
     return () => {
       window.removeEventListener('deviceorientation', handleOrientation);
